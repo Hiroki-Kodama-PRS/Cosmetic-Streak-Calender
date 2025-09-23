@@ -1,0 +1,77 @@
+
+version: '3.8'
+
+services:
+  # PostgreSQL データベース
+  database:
+    image: postgres:15-alpine
+    container_name: cosmetic_db
+    environment:
+      POSTGRES_DB: cosmetic_tracker
+      POSTGRES_USER: cosmetic_user
+      POSTGRES_PASSWORD: cosmetic_pass_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    restart: unless-stopped
+    networks:
+      - cosmetic_network
+
+  # Node.js API サーバー
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cosmetic_api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://cosmetic_user:cosmetic_pass_2024@database:5432/cosmetic_tracker
+      JWT_SECRET: cosmetic_jwt_secret_key_2024
+      JWT_EXPIRES_IN: 24h
+      REFRESH_TOKEN_EXPIRES_IN: 30d
+      API_PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - cosmetic_network
+
+  # Redis (セッション・キャッシュ用)
+  redis:
+    image: redis:7-alpine
+    container_name: cosmetic_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - cosmetic_network
+
+  # Nginx (リバースプロキシ)
+  nginx:
+    image: nginx:alpine
+    container_name: cosmetic_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - cosmetic_network
+
+volumes:
+  postgres_data:
+
+networks:
+  cosmetic_network:
+    driver: bridge

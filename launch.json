@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch Backend API",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/index.js",
+      "env": {
+        "NODE_ENV": "development",
+        "DATABASE_URL": "postgresql://cosmetic_user:cosmetic_pass_2024@localhost:5432/cosmetic_tracker",
+        "JWT_SECRET": "cosmetic_jwt_secret_key_2024",
+        "API_PORT": "3000"
+      },
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Debug Backend Tests",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/node_modules/.bin/jest",
+      "args": ["--runInBand", "--no-cache"],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "name": "Attach to Docker Backend",
+      "type": "node",
+      "request": "attach",
+      "port": 9229,
+      "address": "localhost",
+      "localRoot": "${workspaceFolder}/backend",
+      "remoteRoot": "/app",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}
